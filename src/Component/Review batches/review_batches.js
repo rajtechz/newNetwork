@@ -1,3 +1,5 @@
+
+
 import React, { useState, useRef, useEffect } from "react";
 import Header from "../Header/header";
 import { IoFilterSharp } from "react-icons/io5";
@@ -14,27 +16,21 @@ import Search_vendor_popup from "./search_vendor_popup";
 import pdf_img from "../images/pdf_downlaod.png";
 import random_pdf from "../images/dummy-pdf_2.pdf";
 import { FormControl, Select, MenuItem, InputLabel } from "@mui/material";
-import BatchPopup from "./batchPopup";
 import Chip from "@mui/material/Chip";
-// import { FaChevronDown } from "react-icons/fa";
 import {
   fetchBatchInvoiceData,
   updateBatchInvoiceStatus,
   updateBatchFinanceStatus,
 } from "../../api/api";
 import { Circles } from "react-loader-spinner";
-// import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ReviewHooksFile } from "./reviewHooksFile";
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { useNavigate, useLocation } from "react-router-dom";
+
 function Review_batches() {
-  const [showHoldModalBatch, setShowHoldModalBatch] = useState(false);
-  const [selectedBatchData, setSelectedBatchData] = useState(null);
-  // Later in your component:
-  const closePopup = () => {
-    setShowHoldModalBatch(false);
-  };
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const { vendorId = "", isExcelUpload = false } = state || {}; // Define vendorId and isExcelUpload from navigation state
 
   const [invoicesData, setInvoicesData] = useState([]);
   const [vendorSearch, setVendorSearch] = useState("");
@@ -67,9 +63,6 @@ function Review_batches() {
 
   const filteredInvoices = Array.isArray(invoicesData)
     ? invoicesData.filter((inv) => {
-        // Remove the strict date requirement
-        // if (!inv.batchCreationDate) return false;
-
         const creationDateObj = inv.batchCreationDate
           ? new Date(inv.batchCreationDate)
           : null;
@@ -126,20 +119,14 @@ function Review_batches() {
     indexOfFirstItem,
     indexOfLastItem
   );
-  console.log(currentInvoices, "cureent invoce data");
 
   const handleInvoiceStatusChange = async (index, newStatus) => {
     const globalIndex = indexOfFirstItem + index;
     const selectedInvoice = invoicesData[globalIndex];
     const batchNo = selectedInvoice?.batchNo;
 
-    console.log("Updating invoice status...");
-    console.log("Selected Batch No:", batchNo);
-    console.log("New Status:", newStatus);
-
     try {
       const reason = newStatus === "Rejected" ? "Some rejection reason" : "";
-
       const response = await updateBatchInvoiceStatus({
         batchNo,
         status: newStatus,
@@ -175,12 +162,8 @@ function Review_batches() {
     const selectedInvoice = invoicesData[globalIndex];
     const batchNo = selectedInvoice?.batchNo;
 
-    console.log("Updating finance status...");
-    console.log("Selected Batch No:", batchNo);
-    console.log("New Finance Status:", newStatus);
     try {
       const reason = newStatus === "Rejected" ? "Finance rejected" : "";
-
       const response = await updateBatchFinanceStatus({
         batchNo,
         status: newStatus,
@@ -217,6 +200,7 @@ function Review_batches() {
       setLoading(true);
       try {
         const data = await fetchBatchInvoiceData();
+        console.log("Fetched invoice data:", data);
         if (Array.isArray(data.dataItems)) {
           setInvoicesData(data.dataItems);
         } else {
@@ -225,6 +209,10 @@ function Review_batches() {
       } catch (err) {
         console.error("Failed to load invoice data", err);
         setInvoicesData([]);
+        toast.error("Failed to load invoice data.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
       } finally {
         setLoading(false);
       }
@@ -233,45 +221,46 @@ function Review_batches() {
     getData();
   }, []);
 
-  // console.log(currentInvoices, "current Invoice");
   const totalGrossAmount = invoicesData.reduce(
     (total, invoice) => total + (parseFloat(invoice.grossAmount) || 0),
     0
   );
-  ///////////////////////////// uplaod invoce
+
   const fileInputRef = useRef(null);
 
   const handleUploadClick = () => {
-    fileInputRef.current.click(); // Trigger the hidden input
+    fileInputRef.current.click();
   };
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type === "application/pdf") {
       console.log("Selected PDF:", file.name);
-      // Handle file upload logic here (e.g. send to backend)
     } else {
-      alert("Please select a valid PDF file.");
+      toast.error("Please select a valid PDF file.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
+
   return (
     <div>
-      {/* <Header /> */}
+      <Header />
       <ToastContainer />
       <div className="container mt-4">
         <div className="netwrok_table_main_content">
-          <div className="d-flex justify-content-between  network_filter_div">
+          <div className="table-container mt-3" style={{ overflowX: "auto", width: "100%" }}>
+          <div className="d-flex justify-content-between network_filter_div">
             <h5 className="fw-bold m-0">Review Batches</h5>
-
-
             <button
               className="btn btn-primary d-flex align-items-center"
               style={{
-                backgroundColor: "#8000d7", 
+                backgroundColor: "#8000d7",
                 border: "none",
                 padding: "10px 20px",
                 borderRadius: "8px",
-                fontWeight: "500",
+                fontWeight: "bold",
                 fontSize: "16px",
               }}
               onClick={() => setShowHoldModal(true)}
@@ -280,7 +269,7 @@ function Review_batches() {
               Create Batch
             </button>
           </div>
-          <div className="d-flex justify-content-between  network_filter_div">
+          <div className="d-flex justify-content-between network_filter_div">
             <div className="d-flex justify-content-between align-items-center all_search_input">
               <div
                 className="review_batch_seach input-group"
@@ -338,7 +327,7 @@ function Review_batches() {
               </div>
             </div>
 
-            <div className="d-flex justify-content-between  all_search_input">
+            <div className="d-flex justify-content-between all_search_input">
               <div
                 className="custom_date_wrapper review_batch_seach"
                 style={{ maxWidth: "240px" }}
@@ -356,7 +345,7 @@ function Review_batches() {
                 </span>
               </div>
               <div
-                className=" input-group review_batch_status"
+                className="input-group review_batch_status"
                 style={{ maxWidth: "240px" }}
               >
                 <select
@@ -374,7 +363,6 @@ function Review_batches() {
             </div>
           </div>
           {loading ? (
-            // <div className="text-center mt-4">Loading invoices...</div>
             <div
               className="d-flex justify-content-center align-items-center"
               style={{ height: "200px" }}
@@ -389,34 +377,23 @@ function Review_batches() {
             </div>
           ) : (
             <div className="table-responsive mt-3">
-              <Table className="bg-white text-center border-0 network_table">
-                <thead style={{ backgroundColor: "#EEF4FF" }}>
+              <Table className="bg-white text-center border-0 network_table" style={{ minWidth: "1200px" }}>
+                <thead style={{ backgroundColor: "#EEF4FF", position: "sticky", top: 0, zIndex: 1 }}>
                   <tr className="text-dark fw-semibold table_th_border">
                     <th className="border-start">View</th>
-                    {/* <th style={{ whiteSpace: "nowrap" }}>AA no</th> */}
                     <th style={{ whiteSpace: "nowrap" }}>Batch No</th>
                     <th style={{ whiteSpace: "nowrap" }}>Vendor Name</th>
-                    <th style={{ whiteSpace: "nowrap" }}>
-                      Batch Creation Date
-                    </th>
+                    <th style={{ whiteSpace: "nowrap" }}>Batch Creation Date</th>
                     <th style={{ whiteSpace: "nowrap" }}>Batch Closure Date</th>
                     <th style={{ whiteSpace: "nowrap" }}>Invoice No</th>
                     <th style={{ whiteSpace: "nowrap" }}>Invoice Date</th>
                     <th style={{ whiteSpace: "nowrap" }}>Invoice Amount</th>
                     <th style={{ whiteSpace: "nowrap" }}>Final Amount</th>
                     <th style={{ whiteSpace: "nowrap" }}>Gross Amount</th>
-                    <th style={{ whiteSpace: "nowrap" }}>
-                      Total Service Charge
-                    </th>
-                    <th style={{ whiteSpace: "nowrap" }}>
-                      Total Repair Charge
-                    </th>
+                    <th style={{ whiteSpace: "nowrap" }}>Total Service Charge</th>
+                    <th style={{ whiteSpace: "nowrap" }}>Total Repair Charge</th>
                     <th style={{ whiteSpace: "nowrap" }}>Remarks</th>
-                    {/* <th style={{ whiteSpace: "nowrap" }}>Upload invoice</th> */}
                     <th style={{ whiteSpace: "nowrap" }}>Invoice Status</th>
-                    {/* <th className="border-end" style={{ whiteSpace: "nowrap" }}>
-                      Finance Status
-                    </th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -425,92 +402,63 @@ function Review_batches() {
                       key={index}
                       className="text-center border-bottom network_td_item"
                     >
-                      <td
-                        className="border-start align-middle cursor-pointer"
-                        onClick={() => {
-                          setSelectedBatchData(invoice); // or the array of records
-                          setShowHoldModalBatch(true);
-                        }}
-                      >
+                      <td className="border-start align-middle">
                         <FaEye
                           className="text-purple review_fa_eye"
+                          style={{ cursor: "pointer" }}
                           onClick={() => {
-                            console.log("Clicked invoice row:", invoice); // 👈 This will log the row data
-
-                            const splitData = (key) =>
-                              invoice[key]?.split(",").map((v) => v.trim()) ||
-                              [];
-
-                            const invoicesArray = splitData("aaNo").map(
-                              (_, i) => ({
-                                aA_Number: splitData("aaNo")[i] || "",
-                                imeiNumber: splitData("imeiNo")[i] || "",
-                                creationDate: invoice.creationDate || "",
-                                closureDate: invoice.closureDate || "",
-                                customerName:
-                                  splitData("customerName")[i] || "",
-                                serviceType: splitData("serviceType")[i] || "",
-                                brand: splitData("brand")[i] || "",
-                                makeModel: splitData("makeModel")[i] || "",
-                                repairCharges:
-                                  splitData("repairCharges")[i] || "",
-                                // chargesIncGST:
-                                //   splitData("chargesInclGST")[i] || "",
-                                total: splitData("total")[i] || "",
-                                invoiceStatus: invoice.invoiceStatus || "",
-                                sellingPartner:
-                                  splitData("sellingPartner")[i] || "",
-                              })
-                            );
-
-                            setSelectedBatchData({
-                              vendorName: invoice.vendorName,
-                              invoiceList: invoicesArray,
+                            console.log("Clicked invoice row:", invoice);
+                            const selectedBatchData = {
+                              aaNo: invoice.aaNo || "",
+                              imeiNo: invoice.imeiNo || "",
+                              creationDate:
+                                invoice.creationDate ||
+                                new Date().toLocaleDateString("en-GB"),
+                              closureDate: invoice.closureDate || "",
+                              customerName: invoice.customerName || "",
+                              serviceType: invoice.serviceType || "",
+                              brand: invoice.brand || "",
+                              makeModel: invoice.makeModel || "",
+                              repairCharges: invoice.repairCharges || "",
+                              total: invoice.total || "",
+                              invoiceStatus: invoice.invoiceStatus || "",
+                              sellingPartner: invoice.sellingPartner || "",
+                              batchNo: invoice.batchNo || "",
+                              vendorName: invoice.vendorName || "",
+                              remarks: invoice.remarks || "",
+                            };
+                            navigate("/ReviewBatchPage", {
+                              state: {
+                                selectedBatchData,
+                                vendorId,
+                                isExcelUpload,
+                              },
                             });
-
-                            setShowHoldModalBatch(true);
                           }}
                         />
                       </td>
-
+                      <td className="align-middle">{invoice.batchNo ?? "--"}</td>
+                      <td className="align-middle">{invoice.vendorName ?? "--"}</td>
                       <td className="align-middle">
-                        {invoice.batchNo ?? "--"}
-                      </td>
-                      <td className="align-middle">
-                        {invoice.vendorName ?? "--"}
-                      </td>
-                      <td className="align-middle">
-                        {invoice.creationDate
-                          ? new Date(invoice.creationDate).toLocaleDateString(
-                              "en-GB"
-                            )
+                        {invoice.batchCreationDate
+                          ? new Date(invoice.batchCreationDate).toLocaleDateString("en-GB")
                           : "--"}
                       </td>
                       <td className="align-middle">
                         {invoice.batchClosureDate
-                          ? new Date(
-                              invoice.batchClosureDate
-                            ).toLocaleDateString("en-GB")
+                          ? new Date(invoice.batchClosureDate).toLocaleDateString("en-GB")
                           : "--"}
                       </td>
-                      <td className="align-middle">
-                        {invoice.invoiceNumber ?? "--"}
-                      </td>
+                      <td className="align-middle">{invoice.invoiceNumber ?? "--"}</td>
                       <td className="align-middle">
                         {invoice.invoiceDate
-                          ? new Date(invoice.invoiceDate).toLocaleDateString(
-                              "en-GB"
-                            )
+                          ? new Date(invoice.invoiceDate).toLocaleDateString("en-GB")
                           : "--"}
                       </td>
+                      <td className="align-middle">{invoice.invoiceAmount ?? "--"}</td>
+                      <td className="align-middle">{invoice.finalAmount ?? "--"}</td>
                       <td className="align-middle">
-                        {invoice.invoiceAmount ?? "--"}
-                      </td>
-                      <td className="align-middle">
-                        {invoice.finalAmount ?? "--"}
-                      </td>
-                      <td className="align-middle">
-                        ₹{totalGrossAmount.toLocaleString() ?? "--"}
+                        ₹{invoice.grossAmount ? parseFloat(invoice.grossAmount).toLocaleString() : "--"}
                       </td>
                       <td className="align-middle">
                         ₹{invoice.totalServiceCharges ?? "0"}
@@ -518,68 +466,16 @@ function Review_batches() {
                       <td className="align-middle">
                         ₹{invoice.totalRepairCharges ?? "0"}
                       </td>
-                      <td className="align-middle">
-                        {invoice.remarks ?? "No Remarks"}
-                      </td>
-                      {/* <td className="align-middle">
-                        <button type="button" onClick={handleUploadClick}>
-                          Upload Invoice
-                        </button>
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          accept="application/pdf"
-                          onChange={handleFileChange}
-                          style={{ display: "none" }}
-                        />
-                      </td> */}
-                      {/* Invoice Status Dropdown */}
+                      <td className="align-middle">{invoice.remarks ?? "No Remarks"}</td>
                       <td className="align-middle">
                         <Chip
-                          label={invoice.invoiceStatus}
+                          label={invoice.invoiceStatus || "Unknown"}
                           variant="outlined"
                           sx={{
-                            // borderColor: "#046C4E",
-                            // backgroundColor: "#BCF0DA",
                             color: "#31C48D",
                           }}
                         />
                       </td>
-
-                      {/* Finance Status Dropdown */}
-                      {/* <td className="align-middle border-end">
-                        {invoice.financeStatus === "" ? (
-                          <div className="network_table_main">
-                            <span className="custom-dropdown-toggle network_table_approve">
-                              --
-                            </span>
-                          </div>
-                        ) : (
-                          <Dropdown className="network_table_main">
-                            <Dropdown.Toggle
-                              className={`custom-dropdown-toggle network_table_approve ${getStatusBadgeClass(
-                                invoice.financeStatus
-                              )}`}
-                            >
-                              {invoice.financeStatus}{" "}
-                              <FaChevronDown className="dropdown-icon" />
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu className="custom-dropdown-menu">
-                              {financeOptions.map((status) => (
-                                <Dropdown.Item
-                                  key={status}
-                                  onClick={() =>
-                                    handleFinanceStatusChange(index, status)
-                                  }
-                                  className="custom-dropdown-item"
-                                >
-                                  {status}
-                                </Dropdown.Item>
-                              ))}
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        )}
-                      </td> */}
                     </tr>
                   ))}
                 </tbody>
@@ -594,7 +490,7 @@ function Review_batches() {
             >
               Previous
             </button>
-            <span className="page-info ">
+            <span className="page-info">
               Page {currentPage} of {totalPages}
             </span>
             <button
@@ -612,12 +508,28 @@ function Review_batches() {
         handleClose={() => setShowHoldModal(false)}
         vendors={vendorList}
       />
-
-      <BatchPopup
-        show={showHoldModalBatch}
-        handleClose={closePopup}
-        selectedBatchData={selectedBatchData}
-      />
+      <style jsx>{`
+        .table-container {
+          overflow-x: auto;
+          width: 100%;
+        }
+        .network_table {
+          min-width: 1200px;
+        }
+        .network_table th,
+        .network_table td {
+          padding: 8px;
+          vertical-align: middle;
+          white-space: nowrap;
+        }
+        .pagination-container {
+          margin-top: 1rem;
+        }
+        .page-info {
+          font-weight: 500;
+        }
+      `}</style>
+    </div>
     </div>
   );
 }

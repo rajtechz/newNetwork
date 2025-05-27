@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
-import { useLocation } from "react-router-dom"; // Import useLocation
+import { useLocation, useNavigate } from "react-router-dom"; // Import useLocation
 import Header from "../Header/header";
 import { Table } from "react-bootstrap";
 import { FaDownload } from "react-icons/fa";
@@ -11,6 +11,7 @@ import BatchPopup from "./batchPopup";
 import { Circles } from "react-loader-spinner";
 
 function Vendor_name() {
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,12 +20,10 @@ function Vendor_name() {
   const [showHoldModal, setShowHoldModal] = useState(false);
   const [isExcelUpload, setIsExcelUpload] = useState(false);
   const itemsPerPage = 8;
-
   // Get vendorName and vendorId from location state
   const location = useLocation();
-  const { vendorName, vendorId } = location.state || {}; // Destructure vendorName and vendorId from state
+  const { vendorName, vendorId } = location.state || {};
   console.log(vendorName, vendorId, "vendorrrrr name");
-
   useEffect(() => {
     const fetchData = async () => {
       if (vendorName) {
@@ -73,25 +72,6 @@ function Vendor_name() {
     return total + (isNaN(amount) ? 0 : amount);
   }, 0);
 
-  // const formatDate = (dateTimeStr) => {
-  //   if (!dateTimeStr) return "--";
-  //   const [datePart] = dateTimeStr.split(" ");
-  //   const [day, month, year] = datePart.split("-");
-  //   return `${day}/${month}/${year}`;
-  // };
-  ////////////////////////
-  // const formatDate = (dateTimeStr) => {
-  //   if (!dateTimeStr) return "--";
-
-  //   const str = String(dateTimeStr); // Force it to string
-  //   const [datePart] = str.split(" ");
-  //   if (!datePart || !datePart.includes("-")) return "--";
-
-  //   const [day, month, year] = datePart.split("-");
-  //   if (!day || !month || !year) return "--";
-
-  //   return `${day}/${month}/${year}`;
-  // };
   const formatDate = (dateTimeStr) => {
     if (!dateTimeStr || typeof dateTimeStr !== "string") return "--";
 
@@ -112,15 +92,7 @@ function Vendor_name() {
 
     return `${day}/${month}/${year}`;
   };
-  // const [selectedInvoices, setSelectedInvoices] = useState([]);
-  // const handleSubmit = () => {
-  //   const selectedInvoiceData = invoices.filter((invoice) =>
-  //     selectedAAno.includes(invoice.aA_Number) // ✅ match the selection field
-  //   );
-  //   setSelectedInvoices(selectedInvoiceData);
-  //   setShowHoldModal(true);
-  //   console.log("Submitted full invoices:", selectedInvoiceData);
-  // };
+
   const [selectedInvoices, setSelectedInvoices] = useState([]);
   const handleCheckboxChange = (invoiceId) => {
     // Toggle the checkbox state for the invoice
@@ -150,10 +122,29 @@ function Vendor_name() {
       alert("Please select at least one invoice before submitting.");
       return;
     }
+    setSelectedInvoices(selectedInvoiceData);
+    // setShowHoldModal(true); // Open the popup
+    // navigate("/vendorBatchPage");
+    // console.log("Submitted selected invoices:", selectedInvoiceData);
 
-    setSelectedInvoices(selectedInvoiceData); // Store selected invoices
-    setShowHoldModal(true); // Open the popup
-    console.log("Submitted selected invoices:", selectedInvoiceData);
+    navigate("/vendorBatchPage", {
+      state: {
+        selectedInvoices: selectedInvoiceData,
+        vendorName: vendorName,
+        vendorId: vendorId,
+        isExcelUpload: isExcelUpload,
+      },
+    });
+    setInvoices((prevInvoices) =>
+      prevInvoices.map((invoice) => ({
+        ...invoice,
+        isChecked: false, // Reset all checkboxes after submission
+      }))
+    );
+    setSelectedAAno([]); // Clear selectedAAno after submission
+    setCurrentPage(1); // Reset to the first page
+    setIsExcelUpload(false); // Reset isExcelUpload state
+    
   };
 
   ///////////////////////// uplaod invoice funactioalony
@@ -169,7 +160,7 @@ function Vendor_name() {
     if (file) {
       const reader = new FileReader();
       const fileExtension = file.name.split(".").pop().toLowerCase();
-  
+
       reader.onload = (e) => {
         let data;
         if (fileExtension === "csv") {
@@ -183,7 +174,6 @@ function Vendor_name() {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
         }
-  
         const [headers, ...rows] = data;
         const formattedData = rows.map((row) =>
           headers.reduce((acc, key, i) => {
@@ -203,9 +193,9 @@ function Vendor_name() {
                 Total: "total",
                 "Invoice Status": "invoiceStatus",
               }[key] || key;
-  
+
             let value = row[i];
-  
+
             // Format specific fields to have 2 decimal places if they are numeric
             if (["repairCharges", "total"].includes(mappedKey)) {
               if (value === null || value === undefined || value === "") {
@@ -215,17 +205,33 @@ function Vendor_name() {
                 value = isNaN(num) ? "0.00" : num.toFixed(2);
               }
             }
-  
+
             acc[mappedKey] = value;
             return acc;
           }, {})
         );
-  
+
         setSelectedInvoices(formattedData);
-        setShowHoldModal(true);
+        // setShowHoldModal(true);
+        navigate("/vendorBatchPage", {
+          state: {
+            selectedInvoices: formattedData,
+            vendorName: vendorName,
+            vendorId: vendorId,
+          },
+        });
+        setInvoices((prevInvoices) => [
+          ...prevInvoices,
+          ...formattedData.map((invoice) => ({
+            ...invoice,
+            isChecked: false,
+          })),
+        ]);
+        setSelectedAAno([]); // Clear selectedAAno after upload
+        setCurrentPage(1); // Reset to the first page
         setIsExcelUpload(true);
       };
-  
+
       if (fileExtension === "csv") {
         reader.readAsText(file);
       } else {
@@ -233,7 +239,7 @@ function Vendor_name() {
       }
     }
   };
-  
+
   /////////////////////////////////////// end excel sheet
   return (
     <div>
@@ -409,7 +415,7 @@ function Vendor_name() {
               Next
             </button>
           </div>
-          <div className="d-flex justify-content-between">
+          {/* <div className="d-flex justify-content-between">
             <div
               className="border border-2 rounded-3 p-3 d-inline-block mt-4"
               style={{ borderColor: "#8000ff" }}
@@ -428,7 +434,7 @@ function Vendor_name() {
               </span>
               <span className="fw-bold text-dark">₹{taoatlAmount}</span>
             </div>
-          </div>
+          </div> */}
           <div className="d-flex mt-4 vendor_submit_btn justify-content-between align-items-center flex-wrap gap-3">
             {/* Selected SRNs on the left */}
             <div className="d-flex flex-wrap gap-2">
@@ -499,14 +505,14 @@ function Vendor_name() {
         handleClose={() => setShowHoldModal(false)}
         selectedInvoices={selectedInvoices}
       /> */}
-      <BatchPopup
+      {/* <BatchPopup
         show={showHoldModal}
         handleClose={() => setShowHoldModal(false)}
         selectedInvoices={selectedInvoices}
         vendorName={vendorName}
         vendorId={vendorId}
         isExcelUpload={isExcelUpload}
-      />
+      /> */}
     </div>
   );
 }

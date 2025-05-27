@@ -23,6 +23,9 @@ import { ToastContainer } from 'react-toastify';
 import { AuthContext } from './context/AuthContext';
 import EditData from './Component/Review batches/EditData';
 import PartialApproval from './Component/PartialApproval/PartialApproval';
+import VendorBatchPage from './Component/Vandor Name/VendorBatchPage';
+import ReviewBatchPage from './Component/Review batches/ReviewBatchPage';
+import ApprovalBatchPage from './Component/Approval/ApprovalBatchPage';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -81,6 +84,33 @@ function App() {
           }
         />
         <Route
+          path="/ReviewBatchPage"
+          element={
+            <ProtectedRoute
+              element={
+                <>
+                  <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
+                  <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+                  <Box
+                    component="main"
+                    sx={{
+                      flexGrow: 1,
+                      marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
+                      width: '100%',
+                      marginTop: '64px',
+                      overflowX:"scroll",
+                      transition: 'margin 0.3s ease-in-out',
+                    }}
+                  >
+                    <ReviewBatchPage/>
+                  </Box>
+                </>
+              }
+              allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']} // Allow both roles
+            />
+          }
+        />
+        <Route
           path="/approval"
           element={
             <ProtectedRoute
@@ -99,6 +129,32 @@ function App() {
                     }}
                   >
                     <Approval />
+                  </Box>
+                </>
+              }
+              allowedRoles={['NetworkAdmin']}
+            />
+          }
+        />
+        <Route
+          path="/approvalBatchPage"
+          element={
+            <ProtectedRoute
+              element={
+                <>
+                  <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
+                  <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+                  <Box
+                    component="main"
+                    sx={{
+                      flexGrow: 1,
+                      marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
+                      width: '100%',
+                      marginTop: '64px',
+                      transition: 'margin 0.3s ease-in-out',
+                    }}
+                  >
+                    <ApprovalBatchPage />
                   </Box>
                 </>
               }
@@ -129,6 +185,32 @@ function App() {
                 </>
               }
                allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}// Restrict to NetworkAdmin
+            />
+          }
+        />
+        <Route
+          path="/vendorBatchPage"
+          element={
+            <ProtectedRoute
+              element={
+                <>
+                  <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
+                  <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+                  <Box
+                    component="main"
+                    sx={{
+                      flexGrow: 1,
+                      marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
+                      width: '100%',
+                      marginTop: '64px',
+                      transition: 'margin 0.3s ease-in-out',
+                    }}
+                  >
+                    <VendorBatchPage/>
+                  </Box>
+                </>
+              }
+               allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />
