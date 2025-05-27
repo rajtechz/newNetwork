@@ -1,294 +1,3 @@
-// import React, { useState, useContext } from 'react';
-// import { CssBaseline, Box, useMediaQuery, CircularProgress, Typography } from '@mui/material';
-// import { Routes, Route, Navigate } from 'react-router-dom';
-// import Header from './Component/Header/header';
-// import Sidebar from './Component/Sidebar/sidebar';
-// import Review_batches from './Component/Review batches/review_batches';
-// import Approval from './Component/Approval/approval';
-// import Vendor_name from './Component/Vandor Name/vendor_name';
-// import Reajectedcases from './Component/Reajected Cases/reajectedcases';
-// import InvoiceTemplate from './Component/InvoiceTemplate/Invoice_template';
-// import QueryCase from './Component/Query case/queryCase';
-// import HoldCase from './Component/Hold Cases/holdcase';
-// import Concern from './Component/Concern/concern';
-// import BankReject from './Component/BankReject/BankReject';
-// import Login from './Component/Login/Login';
-// import Unauthorized from './Component/Unauthorized';
-// import ProtectedRoute from './Component/ProtectedRoute';
-// import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
-// import { ToastContainer } from 'react-toastify';
-// import { AuthContext } from './context/AuthContext';
-
-// function App() {
-//   const [sidebarOpen, setSidebarOpen] = useState(true);
-//   const isMobile = useMediaQuery('(max-width: 768px)');
-//   const { loading, user } = useContext(AuthContext); // Access loading state
-
-//   const toggleSidebar = () => {
-//     setSidebarOpen((prev) => !prev);
-//   };
-
-//   // Render a loading indicator while checking localStorage
-//   if (loading) {
-//     return (
-//       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-//         <CircularProgress />
-//         <Typography sx={{ ml: 2 }}>Loading...</Typography>
-//       </Box>
-//     );
-//   }
-
-//   return (
-//     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-//       <CssBaseline />
-//       <ToastContainer position="top-right" autoClose={3000} />
-//       <Routes>
-//         {/* Public Route */}
-//         <Route path="/login" element={<Login />} />
-//         <Route path="/unauthorized" element={<Unauthorized />} />
-
-//         {/* Protected Routes */}
-//         <Route
-//           path="/"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <Review_batches />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkSubAdmin'] } 
-//             />
-//           }
-//         />
-//         <Route
-//           path="/approval"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <Approval />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkAdmin']} // Only NetworkAdmin
-//             />
-//           }
-//         />
-//         <Route
-//           path="/vendor-name"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <Vendor_name />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkSubAdmin']}
-//             />
-//           }
-//         />
-//         <Route
-//           path="/invoice-template"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <InvoiceTemplate />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkAdmin']} // Only NetworkAdmin
-//             />
-//           }
-//         />
-//         <Route
-//           path="/reajected-cases"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <Reajectedcases />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkAdmin']} // Only NetworkAdmin
-//             />
-//           }
-//         />
-//         <Route
-//           path="/query-case"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <QueryCase />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkAdmin']} // Only NetworkAdmin
-//             />
-//           }
-//         />
-//         <Route
-//           path="/hold-case"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <HoldCase />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkAdmin']} // Only NetworkAdmin
-//             />
-//           }
-//         />
-//         <Route
-//           path="/concern"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <Concern />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkAdmin']} // Only NetworkAdmin
-//             />
-//           }
-//         />
-//         <Route
-//           path="/bankReject"
-//           element={
-//             <ProtectedRoute
-//               element={
-//                 <>
-//                   <Header open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
-//                   <Box
-//                     component="main"
-//                     sx={{
-//                       flexGrow: 1,
-//                       marginLeft: sidebarOpen && !isMobile ? '0px' : 0,
-//                       width: '100%',
-//                       marginTop: '64px',
-//                       transition: 'margin 0.3s ease-in-out',
-//                     }}
-//                   >
-//                     <BankReject />
-//                   </Box>
-//                 </>
-//               }
-//               allowedRoles={['NetworkAdmin']} // Only NetworkAdmin
-//             />
-//           }
-//         />
-//         <Route path="*" element={<Navigate to="/login" replace />} />
-//       </Routes>
-//     </Box>
-//   );
-// }
-
-// export default App;
 
 
 
@@ -419,7 +128,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']} // Restrict to NetworkAdmin
+               allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}// Restrict to NetworkAdmin
             />
           }
         />
@@ -445,7 +154,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']}
+               allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />
@@ -471,7 +180,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']}
+               allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />
@@ -497,7 +206,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']}
+                allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />
@@ -523,7 +232,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']}
+              allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />
@@ -549,7 +258,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']}
+             allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />
@@ -575,7 +284,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']}
+             allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />
@@ -601,7 +310,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']}
+              allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />
@@ -627,7 +336,7 @@ function App() {
                   </Box>
                 </>
               }
-              allowedRoles={['NetworkAdmin']}
+               allowedRoles={['NetworkSubAdmin', 'NetworkAdmin']}
             />
           }
         />

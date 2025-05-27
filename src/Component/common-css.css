@@ -747,7 +747,7 @@ select:focus {
 
 .network_table tr.row-green td {
   background-color: #E4FFE4;
-  color: white;
+  /* color: white; */
 }
 
 /* Optional: Zebra striping for rows that are normal (no row-red/yellow/green applied) */

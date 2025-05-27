@@ -1,7 +1,13 @@
-
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
-import { FaChevronDown, FaEye, FaDownload, FaTrash, FaUpload, FaEdit } from "react-icons/fa";
+import {
+  FaChevronDown,
+  FaEye,
+  FaDownload,
+  FaTrash,
+  FaUpload,
+  FaEdit,
+} from "react-icons/fa";
 import Papa from "papaparse";
 import { useNavigate } from "react-router-dom";
 import { saveAs } from "file-saver";
@@ -29,7 +35,7 @@ const BatchPopup = ({
   const [invoiceDate, setInvoiceDate] = useState("");
   const [invoiceAmount, setInvoiceAmount] = useState("");
   const [amountError, setAmountError] = useState("");
-    const [hoveredRow, setHoveredRow] = useState(null);
+  const [hoveredRow, setHoveredRow] = useState(null);
 
   const [fieldErrors, setFieldErrors] = useState({
     invoiceNo: false,
@@ -62,21 +68,35 @@ const BatchPopup = ({
     : grossAmount.toFixed(2);
 
   useEffect(() => {
+    console.log("batch data",selectedBatchData)
     if (!selectedBatchData) return;
     setLoading(true);
     if (selectedBatchData.aaNo) {
-      const aaNumbers = selectedBatchData.aaNo.split(",").map((val) => val.trim());
+      const aaNumbers = selectedBatchData.aaNo
+        .split(",")
+        .map((val) => val.trim());
       aaNumbers.forEach((aaNo, index) => {
-        console.log(`aaNo ${index + 1}: ${aaNo}`);
+        // console.log(`aaNo ${index + 1}: ${aaNo}`);
       });
 
-      // Fetch API data for each aaNo
       Promise.all(
         aaNumbers.map((aaNo) =>
           fetch(`${BASE_URL}/GetGadgetCaseDetailsByAA?aaNumbers=${aaNo}`)
-            .then((response) => response.json())
+            .then((response) => {
+              if (!response.ok) {
+                console.error(
+                  `HTTP error for aaNo ${aaNo}: ${response.status}`
+                );
+                return null;
+              }
+              return response.json();
+            })
             .then((responseData) => {
-              console.log(`API response for ${aaNo}:`, responseData.dataItems);
+              // console.log(`API response for ${aaNo}:`, responseData);
+              if (!responseData || !responseData.dataItems) {
+                // console.warn(`No dataItems for aaNo ${aaNo}`);
+                return [];
+              }
               return Array.isArray(responseData.dataItems)
                 ? responseData.dataItems
                 : [];
@@ -88,8 +108,8 @@ const BatchPopup = ({
         )
       )
         .then((results) => {
-          // Flatten and filter out empty arrays
           const combinedData = results.flat().filter((item) => item);
+          console.log("Combined API data:", combinedData);
           setApiData(combinedData);
         })
         .catch((error) => {
@@ -121,6 +141,7 @@ const BatchPopup = ({
       sellingPartner: splitData("sellingPartner")[i],
       batchNo: selectedBatchData.batchNo || "",
       isChecked: true,
+      remarks: splitData("remarks")[i] || "",
     }));
     setInvoices(invoicesArray);
   }, [selectedBatchData]);
@@ -130,38 +151,33 @@ const BatchPopup = ({
 
   const getRowClassName = useCallback(
     (invoice) => {
-      if (!Array.isArray(apiData) || apiData.length === 0) return "";
-
+      if (!Array.isArray(apiData)) return "row-red"; // No API data at all
       const matchedData = apiData.find(
-        (item) => item.aA_Number === invoice.aA_Number
+        (item) => item && item.aA_Number === invoice.aA_Number
       );
-      if (!matchedData) return "row-red";
-
+      if (!matchedData) return "row-red"; // No matching data or null response
       if (
         normalize(matchedData.serviceType) !== normalize(invoice.serviceType) ||
         normalize(matchedData.repairCharges) !==
-        normalize(invoice.repairCharges) ||
+          normalize(invoice.repairCharges) ||
         normalize(matchedData.total) !== normalize(invoice.total)
       ) {
-        return "row-yellow";
+        return "row-yellow"; // Mismatch in data
       }
-
-      return "row-green";
+      return "row-green"; // Data matches
     },
     [apiData]
   );
 
   const getDifferencesData = (invoice) => {
     const matchedData = apiData.find(
-      (item) => item.aA_Number === invoice.aA_Number
+      (item) => item && item.aA_Number === invoice.aA_Number
     );
     if (!matchedData)
       return [
         { field: "AA Number", table: invoice.aA_Number, api: "Not Found" },
       ];
-
     const differences = [];
-
     if (normalize(matchedData.serviceType) !== normalize(invoice.serviceType)) {
       differences.push({
         field: "Service Type",
@@ -169,14 +185,17 @@ const BatchPopup = ({
         api: matchedData.serviceType || "-",
       });
     }
-       if (normalize(matchedData.imeiNumber) !== normalize(invoice.imeiNumber)) {
+    if (normalize(matchedData.imeiNumber) !== normalize(invoice.imeiNumber)) {
       differences.push({
         field: "IMEI Number",
         table: invoice.imeiNumber || "-",
         api: matchedData.imeiNumber || "-",
       });
     }
-       if (normalize(matchedData.sellingPartner) !== normalize(invoice.sellingPartner)) {
+    if (
+      normalize(matchedData.sellingPartner) !==
+      normalize(invoice.sellingPartner)
+    ) {
       differences.push({
         field: "Selling Partner",
         table: invoice.sellingPartner || "-",
@@ -199,9 +218,9 @@ const BatchPopup = ({
         api: matchedData.total || "-",
       });
     }
-
     return differences.length > 0 ? differences : [];
   };
+
   const handleDelete = (index) => {
     console.log("Deleting index:", index);
     console.log("Before delete:", invoices);
@@ -212,6 +231,7 @@ const BatchPopup = ({
       handleClose();
     }
   };
+
   const handleCheckboxChange = (invoiceId) => {
     setInvoices((prevInvoices) =>
       prevInvoices.map((invoice) =>
@@ -263,6 +283,7 @@ const BatchPopup = ({
       "Make Model",
       "Repair Charges",
       "Total",
+      "Remarks",
     ];
     const today = new Date().toLocaleDateString("en-GB");
     const data = currentInvoices.map((invoice) => ({
@@ -276,6 +297,7 @@ const BatchPopup = ({
       makeModel: invoice.makeModel || "",
       repairCharges: invoice.repairCharges || "",
       total: invoice.total || "",
+      remarks: invoice.remarks || "",
     }));
     const csv = Papa.unparse({
       fields: headers,
@@ -329,6 +351,7 @@ const BatchPopup = ({
       formData.append("CreationDate", extract("creationDate"));
       formData.append("ClosureDate", extract("closureDate"));
       formData.append("CustomerName", extract("customerName"));
+      formData.append("Remarks", extract("remarks"));
       formData.append("VendorName", selectedBatchData?.vendorName || "");
       formData.append("finalAmount", finalAmount);
       formData.append("TotalRepairCharges", totalRepairCharges.toFixed(2));
@@ -397,13 +420,17 @@ const BatchPopup = ({
                 {selectedBatchData?.batchNo && (
                   <div className="fw-semibold">
                     <span>Batch No: </span>
-                    <span className="text-primary">{selectedBatchData.batchNo}</span>
+                    <span className="text-primary">
+                      {selectedBatchData.batchNo}
+                    </span>
                   </div>
                 )}
                 {selectedBatchData?.vendorName && (
                   <div className="fw-semibold">
                     <span>Vendor: </span>
-                    <span className="text-success">{selectedBatchData.vendorName}</span>
+                    <span className="text-success">
+                      {selectedBatchData.vendorName}
+                    </span>
                   </div>
                 )}
               </div>
@@ -431,6 +458,7 @@ const BatchPopup = ({
               <Table className="bg-white text-center border-0 network_table">
                 <thead style={{ backgroundColor: "#EEF4FF" }}>
                   <tr className="text-dark fw-semibold table_th_border">
+                    <th className="border-start">Select</th>
                     <th className="border-start">View</th>
                     <th className="border-start">Edit</th>
                     <th style={{ whiteSpace: "nowrap" }}>AA No</th>
@@ -444,26 +472,27 @@ const BatchPopup = ({
                     <th style={{ whiteSpace: "nowrap" }}>Repair Charges</th>
                     <th style={{ whiteSpace: "nowrap" }}>Total</th>
                     <th style={{ whiteSpace: "nowrap" }}>Invoice Status</th>
-                       <th className="border-end" style={{ whiteSpace: "nowrap" }}>
+                    <th className="border-end" style={{ whiteSpace: "nowrap" }}>
                       Mismatched Data
+                    </th>
+                    <th className="border-end" style={{ whiteSpace: "nowrap" }}>
+                      Remarks
                     </th>
                     <th className="border-end" style={{ whiteSpace: "nowrap" }}>
                       Action
                     </th>
-                    
                   </tr>
                 </thead>
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan="13" className="text-center py-3">
+                      <td colSpan="16" className="text-center py-3">
                         Validating data...
                       </td>
                     </tr>
                   )}
                   {!loading &&
-                    currentInvoices.map((invoice, index) => {
-                      return(
+                    currentInvoices.map((invoice, index) => (
                       <tr
                         key={invoice.id || `${invoice.aA_Number}-${index}`}
                         className={`text-center border-bottom network_td_item ${getRowClassName(
@@ -473,6 +502,15 @@ const BatchPopup = ({
                           getRowClassName(invoice).replace("row-", "") + " row"
                         }
                       >
+                        <td className="border-start align-middle">
+                          <Form.Check
+                            type="checkbox"
+                            checked={invoice.isChecked}
+                            onChange={() =>
+                              handleCheckboxChange(invoice.aA_Number)
+                            }
+                          />
+                        </td>
                         <td className="border-start align-middle">
                           <FaEye
                             className="text-purple review_fa_eye"
@@ -484,85 +522,50 @@ const BatchPopup = ({
                             }
                           />
                         </td>
-                         <td className="border-start align-middle">
+                        <td className="border-start align-middle">
                           <FaEdit
                             className="text-purple review_fa_eye"
                             style={{ cursor: "pointer" }}
                             onClick={() =>
                               navigate("/Edit-data", {
-                                state: { invoice: invoice },
+                                state: {
+                                  invoice: invoice,
+                                },
                               })
                             }
                           />
                         </td>
-                         {/* <td className="align-middle">
-                          {getDifferencesData(invoice).length > 0
-                            ? "Mismatch"
-                            : "Valid"}
+                        <td className="align-middle">
+                          {invoice.aA_Number || ""}
                         </td>
-                        <td
-                          className="align-middle position-relative"
-                          onMouseEnter={() => setHoveredRow(index)}
-                          onMouseLeave={() => setHoveredRow(null)}
-                          style={{ cursor: "pointer", position: "relative" }}
-                        >
-                          {getDifferencesData(invoice).length > 0
-                            ? "View Details"
-                            : "-"}
-                          {hoveredRow === index &&
-                            getDifferencesData(invoice).length > 0 && (
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  top: "100%",
-                                  left: "100%",
-                                  transform: "translateX(-50%)",
-                                  zIndex: 1000,
-                                  backgroundColor: "#fff",
-                                  border: "1px solid #ddd",
-                                  padding: "10px",
-                                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                                  minWidth: "300px",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                <table className="table table-sm table-bordered mb-0">
-                                  <thead>
-                                    <tr>
-                                      <th>Field</th>
-                                      <th>Excel Data</th>
-                                      <th>System Data</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {getDifferencesData(invoice).map(
-                                      (diff, i) => (
-                                        <tr key={i}>
-                                          <td>{diff.field}</td>
-                                          <td>{diff.table}</td>
-                                          <td>{diff.api}</td>
-                                        </tr>
-                                      )
-                                    )}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                        </td> */}
-                        <td className="align-middle">{invoice.aA_Number || ""}</td>
-                        <td className="align-middle">{invoice.imeiNumber || ""}</td>
+                        <td className="align-middle">
+                          {invoice.imeiNumber || ""}
+                        </td>
                         <td className="align-middle">
                           {new Date().toLocaleDateString("en-GB")}
                         </td>
-                        <td className="align-middle">{invoice.closureDate || ""}</td>
-                        <td className="align-middle">{invoice.customerName || ""}</td>
-                        <td className="align-middle">{invoice.serviceType || ""}</td>
+                        <td className="align-middle">
+                          {invoice.closureDate || ""}
+                        </td>
+                        <td className="align-middle">
+                          {invoice.customerName || ""}
+                        </td>
+                        <td className="align-middle">
+                          {invoice.serviceType || ""}
+                        </td>
                         <td className="align-middle">{invoice.brand || ""}</td>
-                        <td className="align-middle">{invoice.makeModel || ""}</td>
-                        <td className="align-middle">{invoice.repairCharges || ""}</td>
+                        <td className="align-middle">
+                          {invoice.makeModel || ""}
+                        </td>
+                        <td className="align-middle">
+                          {invoice.repairCharges || ""}
+                        </td>
                         <td className="align-middle">{invoice.total || ""}</td>
                         <td className="align-middle">
-                          <span className="vendore_invoice_status px-3 py-1 rounded-pill" style={{ whiteSpace: "nowrap" }}>
+                          <span
+                            className="vendore_invoice_status px-3 py-1 rounded-pill"
+                            style={{ whiteSpace: "nowrap" }}
+                          >
                             {invoice.invoiceStatus || ""}
                           </span>
                         </td>
@@ -570,55 +573,58 @@ const BatchPopup = ({
                           {getDifferencesData(invoice).length > 0
                             ? "Mismatch"
                             : "Valid"}
-                        <div
-                          className="align-middle position-relative"
-                          onMouseEnter={() => setHoveredRow(index)}
-                          onMouseLeave={() => setHoveredRow(null)}
-                          style={{ cursor: "pointer", position: "relative" }}
-                        >
-                          {getDifferencesData(invoice).length > 0
-                            ? "View Details"
-                            : "-"}
-                          {hoveredRow === index &&
-                            getDifferencesData(invoice).length > 0 && (
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  top: "100%",
-                                  left: "-18%",
-                                  transform: "translateX(-50%)",
-                                  zIndex: 1000,
-                                  backgroundColor: "#fff",
-                                  border: "1px solid #ddd",
-                                  padding: "10px",
-                                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                                  minWidth: "300px",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                <table className="table table-sm table-bordered mb-0">
-                                  <thead>
-                                    <tr>
-                                      <th>Field</th>
-                                      <th>Excel Data</th>
-                                      <th>System Data</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {getDifferencesData(invoice).map(
-                                      (diff, i) => (
-                                        <tr key={i}>
-                                          <td>{diff.field}</td>
-                                          <td>{diff.table}</td>
-                                          <td>{diff.api}</td>
-                                        </tr>
-                                      )
-                                    )}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                        </div>
+                          <div
+                            className="align-middle position-relative"
+                            onMouseEnter={() => setHoveredRow(index)}
+                            onMouseLeave={() => setHoveredRow(null)}
+                            style={{ cursor: "pointer", position: "relative" }}
+                          >
+                            {getDifferencesData(invoice).length > 0
+                              ? "View Details"
+                              : "-"}
+                            {hoveredRow === index &&
+                              getDifferencesData(invoice).length > 0 && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    left: "-18%",
+                                    transform: "translateX(-50%)",
+                                    zIndex: 1000,
+                                    backgroundColor: "#fff",
+                                    border: "1px solid #ddd",
+                                    padding: "10px",
+                                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+                                    minWidth: "300px",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  <table className="table table-sm table-bordered mb-0">
+                                    <thead>
+                                      <tr>
+                                        <th>Field</th>
+                                        <th>Excel Data</th>
+                                        <th>System Data</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {getDifferencesData(invoice).map(
+                                        (diff, i) => (
+                                          <tr key={i}>
+                                            <td>{diff.field}</td>
+                                            <td>{diff.table}</td>
+                                            <td>{diff.api}</td>
+                                          </tr>
+                                        )
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                          </div>
+                        </td>
+                        <td className="align-middle border-end">
+                          {invoice.remarks || "-"}
                         </td>
                         <td
                           className="align-middle border-end pointer-cursor"
@@ -627,7 +633,7 @@ const BatchPopup = ({
                           <FaTrash onClick={() => handleDelete(index)} />
                         </td>
                       </tr>
-)})}
+                    ))}
                 </tbody>
               </Table>
             </div>
@@ -646,7 +652,9 @@ const BatchPopup = ({
                 style={{ backgroundColor: "#eef4ff", marginTop: "1rem" }}
               >
                 <div className="text-start batch_popup_amount">
-                  <div className="fw-bold batch_gross">Total Repair Charges</div>
+                  <div className="fw-bold batch_gross">
+                    Total Repair Charges
+                  </div>
                   <div className="batch_amount_to_fix">
                     ₹ {totalRepairCharges.toFixed(2)}
                   </div>
@@ -703,14 +711,20 @@ const BatchPopup = ({
                     <label className="me-2 fw-semibold w-50">Case Count</label>
                     <input
                       type="text"
-                      className={`form-control border-dark ${uploadedFile && fieldErrors.caseCount ? "is-invalid" : ""
-                        }`}
+                      className={`form-control border-dark ${
+                        uploadedFile && fieldErrors.caseCount
+                          ? "is-invalid"
+                          : ""
+                      }`}
                       placeholder="Enter Case Count"
                       value={caseCount}
                       onChange={(e) => setCaseCount(e.target.value)}
                     />
                     {uploadedFile && fieldErrors.caseCount && (
-                      <div className="text-danger mt-1" style={{ fontSize: "14px" }}>
+                      <div
+                        className="text-danger mt-1"
+                        style={{ fontSize: "14px" }}
+                      >
                         Case Count is required.
                       </div>
                     )}
@@ -719,42 +733,60 @@ const BatchPopup = ({
                     <label className="me-2 fw-semibold w-50">Invoice No</label>
                     <input
                       type="text"
-                      className={`form-control border-dark ${uploadedFile && fieldErrors.invoiceNo ? "is-invalid" : ""
-                        }`}
+                      className={`form-control border-dark ${
+                        uploadedFile && fieldErrors.invoiceNo
+                          ? "is-invalid"
+                          : ""
+                      }`}
                       placeholder="Enter Invoice No"
                       value={invoiceNo}
                       onChange={(e) => setInvoiceNo(e.target.value)}
                     />
                     {uploadedFile && fieldErrors.invoiceNo && (
-                      <div className="text-danger mt-1" style={{ fontSize: "14px" }}>
+                      <div
+                        className="text-danger mt-1"
+                        style={{ fontSize: "14px" }}
+                      >
                         Invoice No is required.
                       </div>
                     )}
                   </div>
                   <div className="col-md-4 align-items-center mb-3">
-                    <label className="me-2 fw-semibold w-50">Invoice Date</label>
+                    <label className="me-2 fw-semibold w-50">
+                      Invoice Date
+                    </label>
                     <input
                       type="date"
-                      className={`form-control border-dark ${uploadedFile && fieldErrors.invoiceDate ? "is-invalid" : ""
-                        }`}
+                      className={`form-control border-dark ${
+                        uploadedFile && fieldErrors.invoiceDate
+                          ? "is-invalid"
+                          : ""
+                      }`}
                       value={invoiceDate}
                       onChange={(e) => setInvoiceDate(e.target.value)}
                       max={new Date().toISOString().split("T")[0]}
                     />
                     {uploadedFile && fieldErrors.invoiceDate && (
-                      <div className="text-danger mt-1" style={{ fontSize: "14px" }}>
+                      <div
+                        className="text-danger mt-1"
+                        style={{ fontSize: "14px" }}
+                      >
                         Invoice Date is required.
                       </div>
                     )}
                   </div>
                   <div className="col-md-4 align-items-center mb-3">
-                    <label className="me-2 fw-semibold w-50">Invoice Amount</label>
+                    <label className="me-2 fw-semibold w-50">
+                      Invoice Amount
+                    </label>
                     <input
                       type="text"
-                      className={`form-control border-dark ${uploadedFile && (fieldErrors.invoiceAmount || amountError)
+                      className={`form-control border-dark ${
+                        uploadedFile &&
+                        (fieldErrors.invoiceAmount || amountError)
                           ? "is-invalid"
                           : ""
-                        }`}
+                      }`}
                       placeholder="Enter Invoice Amount"
                       value={invoiceAmount}
                       onChange={(e) => {
@@ -762,7 +794,8 @@ const BatchPopup = ({
                         setInvoiceAmount(enteredAmount);
                         if (uploadedFile) {
                           if (
-                            parseFloat(enteredAmount) !== parseFloat(finalAmount)
+                            parseFloat(enteredAmount) !==
+                            parseFloat(finalAmount)
                           ) {
                             setAmountError(
                               "Invoice Amount and Final Amount do not match."
@@ -774,12 +807,18 @@ const BatchPopup = ({
                       }}
                     />
                     {uploadedFile && fieldErrors.invoiceAmount && (
-                      <div className="text-danger mt-1" style={{ fontSize: "14px" }}>
+                      <div
+                        className="text-danger mt-1"
+                        style={{ fontSize: "14px" }}
+                      >
                         Invoice Amount is required.
                       </div>
                     )}
                     {amountError && (
-                      <div className="text-danger mt-1" style={{ fontSize: "14px" }}>
+                      <div
+                        className="text-danger mt-1"
+                        style={{ fontSize: "14px" }}
+                      >
                         {amountError}
                       </div>
                     )}
@@ -819,7 +858,7 @@ const BatchPopup = ({
               >
                 <span className="ms-2">Submit</span>
               </button>
-              <button
+              {/* <button
                 type="button"
                 className="btn btn-primary d-flex align-items-center"
                 style={{
@@ -834,7 +873,7 @@ const BatchPopup = ({
                 onClick={() => alert("Send In Partial not implemented yet.")}
               >
                 <span className="ms-2">Send In Partial</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

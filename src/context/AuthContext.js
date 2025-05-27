@@ -1,58 +1,3 @@
-// import React, { createContext, useState, useEffect } from 'react';
-// export const AuthContext = createContext();
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null); // { role: 'NetworkAdmin' | 'NetworkSubAdmin', token: string, email: string }
-//   const [loading, setLoading] = useState(true);
-//   const login = async (credentials) => {
-//     const staticCredentials = [
-//       {
-//         email: 'networkadm@gmail.com',
-//         password: 'adm123',
-//         role: 'NetworkAdmin',
-//       },
-//       {
-//         email: 'networksub@gmail.com',
-//         password: 'sub123',
-//         role: 'NetworkSubAdmin',
-//       },
-//     ];
-//     const matchedUser = staticCredentials.find(
-//       (cred) => cred.email === credentials.email && cred.password === credentials.password
-//     );
-//     if (!matchedUser) {
-//       throw new Error('Invalid credentials');
-//     }
-//     const response = {
-//       role: matchedUser.role,
-//       token: 'fake-jwt-token',
-//       email: matchedUser.email // Include email in user object
-//     };
-//     setUser(response);
-//     localStorage.setItem('user', JSON.stringify(response));
-//     return response;
-//   };
-
-//   const logout = () => {
-//     setUser(null);
-//     localStorage.removeItem('user');
-//   };
-
-//   useEffect(() => {
-//     const storedUser = localStorage.getItem('user');
-//     console.log('Stored user:', storedUser);
-//     if (storedUser) {
-//       setUser(JSON.parse(storedUser));
-//     }
-//     setLoading(false);
-//   }, []);
-
-//   return (
-//     <AuthContext.Provider value={{ user, login, logout, loading }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
 import React, { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
@@ -141,7 +86,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    console.log("Stored user:", storedUser);
+    // console.log("Stored user:", storedUser);
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }

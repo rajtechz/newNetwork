@@ -100,7 +100,10 @@ const BatchPopup = ({
         .join(",");
       fetch(`${BASE_URL}/GetGadgetCaseDetailsByAA?aaNumbers=${aaNumbers}`)
         .then((response) => response.json())
+
         .then((responseData) => {
+          console.log("API Response:", responseData); // <-- Log the full response here
+
           if (Array.isArray(responseData.dataItems)) {
             setApiData([...responseData.dataItems]);
           } else {
@@ -132,7 +135,7 @@ const BatchPopup = ({
       if (
         normalize(matchedData.serviceType) !== normalize(invoice.serviceType) ||
         normalize(matchedData.repairCharges) !==
-        normalize(invoice.repairCharges) ||
+          normalize(invoice.repairCharges) ||
         normalize(matchedData.total) !== normalize(invoice.total)
       ) {
         return "row-yellow";
@@ -498,7 +501,10 @@ const BatchPopup = ({
                       </td>
                       <td className="align-middle">{invoice.total || ""}</td>
                       <td className="align-middle">
-                        <span className="vendore_invoice_status px-3 py-1 rounded-pill" style={{ whiteSpace: "nowrap" }}>
+                        <span
+                          className="vendore_invoice_status px-3 py-1 rounded-pill"
+                          style={{ whiteSpace: "nowrap" }}
+                        >
                           {invoice.invoiceStatus || ""}
                         </span>
                       </td>
@@ -641,10 +647,11 @@ const BatchPopup = ({
                     <label className="me-2 fw-semibold w-50">Case Count</label>
                     <input
                       type="text"
-                      className={`form-control border-dark ${uploadedFile && fieldErrors.caseCount
+                      className={`form-control border-dark ${
+                        uploadedFile && fieldErrors.caseCount
                           ? "is-invalid"
                           : ""
-                        }`}
+                      }`}
                       placeholder="Enter Case Count"
                       value={caseCount}
                       onChange={(e) => setCaseCount(e.target.value)}
@@ -663,10 +670,11 @@ const BatchPopup = ({
                     <label className="me-2 fw-semibold w-50">Invoice No</label>
                     <input
                       type="text"
-                      className={`form-control border-dark ${uploadedFile && fieldErrors.invoiceNo
+                      className={`form-control border-dark ${
+                        uploadedFile && fieldErrors.invoiceNo
                           ? "is-invalid"
                           : ""
-                        }`}
+                      }`}
                       placeholder="Enter Invoice No"
                       value={invoiceNo}
                       onChange={(e) => setInvoiceNo(e.target.value)}
@@ -687,10 +695,11 @@ const BatchPopup = ({
                     </label>
                     <input
                       type="date"
-                      className={`form-control border-dark ${uploadedFile && fieldErrors.invoiceDate
+                      className={`form-control border-dark ${
+                        uploadedFile && fieldErrors.invoiceDate
                           ? "is-invalid"
                           : ""
-                        }`}
+                      }`}
                       value={invoiceDate}
                       onChange={(e) => setInvoiceDate(e.target.value)}
                       max={new Date().toISOString().split("T")[0]}
@@ -711,11 +720,12 @@ const BatchPopup = ({
                     </label>
                     <input
                       type="text"
-                      className={`form-control border-dark ${uploadedFile &&
-                          (fieldErrors.invoiceAmount || amountError)
+                      className={`form-control border-dark ${
+                        uploadedFile &&
+                        (fieldErrors.invoiceAmount || amountError)
                           ? "is-invalid"
                           : ""
-                        }`}
+                      }`}
                       placeholder="Enter Invoice Amount"
                       value={invoiceAmount}
                       onChange={(e) => {

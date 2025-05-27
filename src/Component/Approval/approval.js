@@ -37,6 +37,7 @@ function Approval() {
     const fetchData = async () => {
       try {
         const response = await GetAllApprovalBatchDatafromSubmit();
+        console.log(response)
         if (response?.dataitems) {
           setInvoices(response.dataitems);
         } else {
@@ -108,7 +109,10 @@ function Approval() {
   const itemsPerPage = 8;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentInvoices = filteredInvoices.slice(indexOfFirstItem, indexOfLastItem);
+  const currentInvoices = filteredInvoices.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
 
   const handleNextPage = () => {
@@ -169,7 +173,8 @@ function Approval() {
             ? {
                 ...item,
                 invoiceStatus: newStatus,
-                financeStatus: newStatus === "Approved" ? "Submitted" : item.financeStatus,
+                financeStatus:
+                  newStatus === "Approved" ? "Submitted" : item.financeStatus,
               }
             : item
         )
@@ -192,7 +197,10 @@ function Approval() {
           <div className="table-responsive mt-3">
             <div className="d-flex justify-content-between network_filter_div">
               <div className="d-flex justify-content-between align-items-center all_search_input">
-                <div className="review_batch_seach input-group" style={{ maxWidth: "280px" }}>
+                <div
+                  className="review_batch_seach input-group"
+                  style={{ maxWidth: "280px" }}
+                >
                   <div className="fa_search_main">
                     <span className="input-group-text bg-light fasearch">
                       <FaSearch className="text-muted" />
@@ -207,7 +215,10 @@ function Approval() {
                     style={{ borderLeft: "none", boxShadow: "none" }}
                   />
                 </div>
-                <div className="review_batch_seach input-group" style={{ maxWidth: "240px" }}>
+                <div
+                  className="review_batch_seach input-group"
+                  style={{ maxWidth: "240px" }}
+                >
                   <div className="fa_search_main">
                     <span className="input-group-text bg-light fasearch">
                       <FaSearch className="text-muted" />
@@ -222,7 +233,10 @@ function Approval() {
                     style={{ borderLeft: "none", boxShadow: "none" }}
                   />
                 </div>
-                <div className="review_batch_seach input-group" style={{ maxWidth: "240px" }}>
+                <div
+                  className="review_batch_seach input-group"
+                  style={{ maxWidth: "240px" }}
+                >
                   <div className="fa_search_main">
                     <span className="input-group-text bg-light fasearch">
                       <FaSearch className="text-muted" />
@@ -239,7 +253,10 @@ function Approval() {
                 </div>
               </div>
               <div className="d-flex justify-content-between all_search_input">
-                <div className="custom_date_wrapper review_batch_seach" style={{ maxWidth: "240px" }}>
+                <div
+                  className="custom_date_wrapper review_batch_seach"
+                  style={{ maxWidth: "240px" }}
+                >
                   <DatePicker
                     ref={dateInputRef}
                     selected={selectedDate}
@@ -257,7 +274,9 @@ function Approval() {
             <Table className="bg-white text-center border-0 network_table">
               <thead style={{ backgroundColor: "#EEF4FF" }}>
                 <tr className="text-dark fw-semibold table_th_border">
-                  <th className="border-start" style={{ whiteSpace: "nowrap" }}>View</th>
+                  <th className="border-start" style={{ whiteSpace: "nowrap" }}>
+                    View
+                  </th>
                   <th style={{ whiteSpace: "nowrap" }}>Batch no</th>
                   <th style={{ whiteSpace: "nowrap" }}>Vendor Name</th>
                   <th style={{ whiteSpace: "nowrap" }}>Case Count</th>
@@ -265,6 +284,7 @@ function Approval() {
                   <th style={{ whiteSpace: "nowrap" }}>Closure Date</th>
                   <th style={{ whiteSpace: "nowrap" }}>Repair Charges</th>
                   <th style={{ whiteSpace: "nowrap" }}>Total</th>
+                  <th style={{ whiteSpace: "nowrap" }}>Remarks</th>
                   <th>Invoice</th>
                   <th style={{ whiteSpace: "nowrap" }}>Invoice Status</th>
                 </tr>
@@ -285,17 +305,32 @@ function Approval() {
                           }}
                         />
                       </td>
-                      <td className="align-middle">{invoice.batchNo || "--"}</td>
-                      <td className="align-middle">{invoice.vendorName || "--"}</td>
-                      <td className="align-middle">{invoice.caseCount || "--"}</td>
-                      <td className="align-middle">{formatDate(invoice.creationDate)}</td>
-                      <td className="align-middle">{invoice.closureDate ? formatDate(invoice.closureDate) : "--"}</td>
+                      <td className="align-middle">
+                        {invoice.batchNo || "--"}
+                      </td>
+                      <td className="align-middle">
+                        {invoice.vendorName || "--"}
+                      </td>
+                      <td className="align-middle">
+                        {invoice.caseCount || "--"}
+                      </td>
+                      <td className="align-middle">
+                        {formatDate(invoice.creationDate)}
+                      </td>
+                      <td className="align-middle">
+                        {invoice.closureDate
+                          ? formatDate(invoice.closureDate)
+                          : "--"}
+                      </td>
                       <td className="align-middle">
                         {invoice.repairCharges
                           ? `₹ ${invoice.repairCharges
                               .split(",")
                               .map((val) => parseFloat(val.trim()))
-                              .reduce((acc, num) => acc + (isNaN(num) ? 0 : num), 0)
+                              .reduce(
+                                (acc, num) => acc + (isNaN(num) ? 0 : num),
+                                0
+                              )
                               .toLocaleString()}`
                           : "--"}
                       </td>
@@ -304,13 +339,24 @@ function Approval() {
                           ? `₹ ${invoice.total
                               .split(",")
                               .map((val) => parseFloat(val.trim()))
-                              .reduce((acc, num) => acc + (isNaN(num) ? 0 : num), 0)
+                              .reduce(
+                                (acc, num) => acc + (isNaN(num) ? 0 : num),
+                                0
+                              )
                               .toLocaleString()}`
                           : "--"}
                       </td>
                       <td className="align-middle">
+                        {invoice.remarks || "No remark"}
+                      </td>
+                      <td className="align-middle">
                         {invoice.invoice ? (
-                          <a href={invoice.invoice} target="_blank" rel="noopener noreferrer" download>
+                          <a
+                            href={invoice.invoice}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                          >
                             <img
                               src={pdfimage}
                               alt="Download PDF"
@@ -325,15 +371,20 @@ function Approval() {
                         {invoice.invoiceStatus !== "Approved" ? (
                           <Dropdown className="network_table_main">
                             <Dropdown.Toggle
-                              className={`custom-dropdown-toggle network_table_approve ${getStatusBadgeClass(invoice.invoiceStatus)}`}
+                              className={`custom-dropdown-toggle network_table_approve ${getStatusBadgeClass(
+                                invoice.invoiceStatus
+                              )}`}
                             >
-                              {invoice.invoiceStatus || "Batch"} <FaChevronDown className="dropdown-icon" />
+                              {invoice.invoiceStatus || "Batch"}{" "}
+                              <FaChevronDown className="dropdown-icon" />
                             </Dropdown.Toggle>
                             <Dropdown.Menu className="custom-dropdown-menu">
                               {invoiceOptions.map((status) => (
                                 <Dropdown.Item
                                   key={status}
-                                  onClick={() => handleInvoiceStatusChange(index, status)}
+                                  onClick={() =>
+                                    handleInvoiceStatusChange(index, status)
+                                  }
                                   className="custom-dropdown-item"
                                 >
                                   {status}
@@ -343,7 +394,9 @@ function Approval() {
                           </Dropdown>
                         ) : (
                           <span
-                            className={`custom-dropdown-toggle network_table_approve ${getStatusBadgeClass(invoice.invoiceStatus)}`}
+                            className={`custom-dropdown-toggle network_table_approve ${getStatusBadgeClass(
+                              invoice.invoiceStatus
+                            )}`}
                           >
                             {invoice.invoiceStatus}
                           </span>
@@ -353,7 +406,7 @@ function Approval() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="10" className="text-center py-4">
+                    <td colSpan="11" className="text-center py-4">
                       No data available
                     </td>
                   </tr>
@@ -362,17 +415,31 @@ function Approval() {
             </Table>
           </div>
           <div className="d-flex justify-content-between align-items-center pagination-container network_previous">
-            <button className="network_previous" onClick={handlePrevPage} disabled={currentPage === 1}>
+            <button
+              className="network_previous"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+            >
               Previous
             </button>
-            <span className="page-info">Page {currentPage} of {totalPages}</span>
-            <button className="network_previous" onClick={handleNextPage} disabled={currentPage === totalPages}>
+            <span className="page-info">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              className="network_previous"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+            >
               Next
             </button>
           </div>
         </div>
       </div>
-      <ApprovalPopup show={showHoldModalBatch} handleClose={closePopup} batchData={selectedBatchData} />
+      <ApprovalPopup
+        show={showHoldModalBatch}
+        handleClose={closePopup}
+        batchData={selectedBatchData}
+      />
     </div>
   );
 }
